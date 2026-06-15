@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+dist-ssr/
+
+# dev tooling / my analysis helpers
+_*.mjs
+*.log
+.DS_Store
+
+# editor
+.vscode/
+.idea/
+
+# env
+.env
+.env.local
+*.local

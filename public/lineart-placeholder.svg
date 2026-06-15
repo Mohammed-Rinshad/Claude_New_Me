@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#222324" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+  <!-- faint botanical / wellness line-art (placeholder for a detailed illustration) -->
+  <g opacity="0.5">
+    <!-- big leaf left -->
+    <path d="M120 620 C 120 480 200 360 320 320 C 280 440 240 560 200 660 Z"/>
+    <path d="M180 560 C 230 520 280 470 300 410 M200 600 C 250 560 300 510 330 450"/>
+    <!-- vine -->
+    <path d="M0 700 C 200 680 240 540 360 560 C 480 580 500 700 640 690"/>
+    <!-- center plant in a pot -->
+    <path d="M690 700 h60 l-8 -70 h-44 Z"/>
+    <path d="M720 630 C 690 560 660 540 640 520 M720 630 C 750 560 780 540 800 520 M720 630 C 720 560 720 520 720 480"/>
+    <circle cx="640" cy="514" r="14"/><circle cx="800" cy="514" r="14"/><circle cx="720" cy="474" r="14"/>
+    <!-- avocado half right -->
+    <ellipse cx="1080" cy="430" rx="70" ry="95"/>
+    <circle cx="1080" cy="450" r="30"/>
+    <!-- tomato -->
+    <circle cx="1230" cy="560" r="40"/>
+    <path d="M1230 520 l-10 -16 m10 16 l10 -16 m-10 16 v-20"/>
+    <!-- dumbbell -->
+    <path d="M1180 660 h120 M1180 640 v40 M1300 640 v40 M1160 648 v24 M1320 648 v24"/>
+    <!-- running figure -->
+    <circle cx="430" cy="430" r="18"/>
+    <path d="M430 448 l-6 50 l-30 26 m30 -52 l28 22 m-46 -34 l-30 8 m48 4 l34 -14"/>
+    <!-- sun -->
+    <circle cx="980" cy="170" r="46"/>
+    <path d="M980 100 v-26 M980 240 v26 M910 170 h-26 M1050 170 h26 M930 120 l-18 -18 M1030 120 l18 -18 M930 220 l-18 18 M1030 220 l18 18"/>
+    <!-- water drops -->
+    <path d="M300 200 c -14 18 -14 30 0 30 c 14 0 14 -12 0 -30 Z"/>
+    <path d="M560 150 c -10 13 -10 22 0 22 c 10 0 10 -9 0 -22 Z"/>
+    <!-- heart -->
+    <path d="M1300 220 c 14 -16 44 -12 44 12 c 0 24 -32 40 -44 52 c -12 -12 -44 -28 -44 -52 c 0 -24 30 -28 44 -12 Z"/>
+  </g>
+</svg>
