@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eaf3ec"/>
+      <stop offset="0.55" stop-color="#f4f3eb"/>
+      <stop offset="1" stop-color="#e7efe6"/>
+    </linearGradient>
+    <linearGradient id="hill1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bcd6bf"/>
+      <stop offset="1" stop-color="#a5bab3"/>
+    </linearGradient>
+    <linearGradient id="hill2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a9b5f"/>
+      <stop offset="1" stop-color="#2f7d3f"/>
+    </linearGradient>
+    <linearGradient id="hill3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f7d3f"/>
+      <stop offset="1" stop-color="#1f5c2e"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1440" height="900" fill="url(#sky)"/>
+
+  <!-- sun -->
+  <circle cx="1120" cy="210" r="92" fill="#ffeb35" opacity="0.85"/>
+  <circle cx="1120" cy="210" r="120" fill="#ffeb35" opacity="0.18"/>
+
+  <!-- distant hills -->
+  <path d="M0 560 C 240 470 420 520 640 500 C 900 476 1100 540 1440 500 L1440 900 L0 900 Z" fill="url(#hill1)"/>
+  <!-- mid hills -->
+  <path d="M0 660 C 300 580 520 640 760 620 C 1040 596 1230 660 1440 620 L1440 900 L0 900 Z" fill="url(#hill2)"/>
+  <!-- foreground hill -->
+  <path d="M0 770 C 280 720 560 760 820 740 C 1100 718 1280 770 1440 745 L1440 900 L0 900 Z" fill="url(#hill3)"/>
+
+  <!-- simple trees -->
+  <g opacity="0.9">
+    <g transform="translate(220 690)"><rect x="-5" y="0" width="10" height="44" fill="#5b3d28"/><circle cx="0" cy="-12" r="34" fill="#357a3e"/><circle cx="-22" cy="4" r="24" fill="#2f7d3f"/><circle cx="22" cy="4" r="24" fill="#3b8a48"/></g>
+    <g transform="translate(1180 700)"><rect x="-5" y="0" width="10" height="44" fill="#5b3d28"/><circle cx="0" cy="-10" r="30" fill="#357a3e"/><circle cx="-18" cy="6" r="20" fill="#2f7d3f"/><circle cx="18" cy="6" r="20" fill="#3b8a48"/></g>
+    <g transform="translate(980 740)"><rect x="-4" y="0" width="8" height="34" fill="#5b3d28"/><circle cx="0" cy="-8" r="22" fill="#3b8a48"/></g>
+  </g>
+
+  <!-- leaves drifting -->
+  <g fill="#2f7d3f" opacity="0.5">
+    <path d="M360 300 q 18 -22 36 0 q -18 22 -36 0 z"/>
+    <path d="M540 220 q 14 -18 28 0 q -14 18 -28 0 z"/>
+    <path d="M900 330 q 16 -20 32 0 q -16 20 -32 0 z"/>
+  </g>
+
+  <text x="720" y="855" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#1f5c2e" opacity="0.55">
+    PLACEHOLDER ILLUSTRATION — replace public/hero.* with your full-bleed artwork
+  </text>
+</svg>

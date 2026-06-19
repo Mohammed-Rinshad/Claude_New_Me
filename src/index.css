@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-paper text-ink font-body antialiased;
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: #1f5c2e;
+    color: #f9f8f3;
+  }
+}
+
+@layer components {
+  /* Eyebrow label — small uppercase tracked text, the signature rhythm opener */
+  .eyebrow {
+    @apply font-body text-[11px] sm:text-xs font-semibold uppercase tracking-eyebrow text-forest;
+  }
+  /* Massive condensed editorial display headline */
+  .display {
+    @apply font-display font-700 uppercase leading-[0.92] tracking-tight;
+  }
+  .btn {
+    @apply inline-flex items-center gap-2 font-body font-semibold uppercase tracking-[0.12em] text-sm
+           transition-all duration-300 ease-out;
+  }
+  .btn-solid {
+    @apply btn bg-ink text-paper px-7 py-4 rounded-full hover:bg-forest hover:gap-3;
+  }
+  .btn-outline {
+    @apply btn border border-ink/30 text-ink px-7 py-4 rounded-full hover:border-forest hover:text-forest hover:gap-3;
+  }
+  .rule {
+    @apply h-px w-full bg-ink/10;
+  }
+}
+
+/* Custom thin scrollbar in keeping with the editorial feel */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f4f3eb;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f5c2e;
+  border-radius: 99px;
+  border: 3px solid #f4f3eb;
+}
+
+.font-700 {
+  font-weight: 700;
+}
+
+/* Grain/paper texture overlay for the tactile book-launch feel */
+.grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
