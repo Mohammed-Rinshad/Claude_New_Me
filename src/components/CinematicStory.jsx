@@ -50,9 +50,11 @@ export default function CinematicStory() {
         <BgLayer p={g} at={[0.82, 0.85, 1, 1]} className="bg-paper" />
 
         {/* ════════ A · THE IMBALANCE ════════ */}
-        {/* The single book (BookJourney) travels left → right → center across these
-            three beats. Text sits on the opposite half on desktop, and stacks below
-            the book on mobile. Only the book moves; the text just fades in. */}
+        {/* The single book (BookJourney) travels to the LEFT and HOLDS there while the
+            text changes (beats 1 → 2), then glides to CENTER for beat 3. Text sits on
+            the RIGHT half on desktop for the first two beats, and stacks below the book
+            on mobile. During the beat 1 → 2 swap the book is stationary; only the text
+            cross-fades. */}
         <Beat
           p={A}
           at={[0, 0.06, 0.34, 0.42]}
@@ -66,7 +68,7 @@ export default function CinematicStory() {
         <Beat
           p={A}
           at={[0.4, 0.5, 0.66, 0.74]}
-          className="text-ink pt-[52vh] lg:pt-0 lg:pr-[52vw] lg:pl-[6vw] lg:items-start lg:text-left"
+          className="text-ink pt-[52vh] lg:pt-0 lg:pl-[52vw] lg:pr-[6vw] lg:items-end lg:text-right"
         >
           <h2 className="font-display font-700 uppercase leading-[0.95] text-[10vw] sm:text-[6.5vw] lg:text-[4.6vw] max-w-4xl lg:max-w-[40vw]">
             And forget to invest in our health

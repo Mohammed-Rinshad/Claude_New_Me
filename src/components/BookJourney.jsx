@@ -12,8 +12,8 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
 // Journey (in wrapper-progress space — tune the constants visually in dev):
 //   0   → H     HERO: identical to the original hero book (centered, rises, scales)
 //   H   → B1    travels down-LEFT  (Scene A · "We spend years building careers")
-//   B1  → B2    crosses to the RIGHT (Scene A · "And forget to invest…")
-//   B2  → B3    returns to CENTER, grows to focus (Scene A · "…change that imbalance")
+//   B1  → B2    stays LEFT, fully anchored — only the text changes (Scene A · "And forget to invest…")
+//   B2  → B3    travels from LEFT to CENTER, grows to focus (Scene A · "…change that imbalance")
 //   B3  → HOLD  pinned centered while the beat is active
 //   HOLD→ OUT   fades fully out — never appears in Scenes B–F or later sections
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
 // progress stops
 const H = 0.105 // hero end / story start (≈ 140vh / (1440vh − 100svh))
 const B1 = 0.15 // book settled LEFT  (beat 1 hold)
-const B2 = 0.2 // book settled RIGHT (beat 2 hold)
+const B2 = 0.2 // book stays LEFT (beat 2 hold — only the text changes)
 const B3 = 0.235 // book CENTER       (beat 3 in)
 const HOLD = 0.25 // pinned center while "imbalance" is active
 const OUT = 0.263 // fully faded before Scene B's dark background takes over
@@ -47,13 +47,14 @@ export default function BookJourney({ p }) {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  // Movement is primarily horizontal (S-curve) + a gentle downward narrative drift.
-  // Scale is kept in a tight band so the book never reads as "flying toward you" —
-  // it stays at a consistent depth and simply travels through the story.
-  // Desktop: book swings to the side halves; text sits opposite, vertically centred.
+  // Movement is a single anchored arc: Center → Left (hold) → Center. No left↔right
+  // bounce. Scale is kept in a tight band so the book never reads as "flying toward
+  // you" — it stays at a consistent depth and simply travels through the story.
+  // Desktop: book settles on the LEFT half and HOLDS there (B1==B2) while the text
+  //          swaps on the right, then glides to centre for the final beat.
   // Mobile : book stays near top-centre (text stacks below) and only nudges ±24px.
   const xOut = desktop
-    ? [0, 0, -0.27 * vw, 0.27 * vw, 0, 0, 0]
+    ? [0, 0, -0.27 * vw, -0.27 * vw, 0, 0, 0]
     : [0, 0, -24, 24, 0, 0, 0]
 
   // Y stays close to centre (small, smooth drift) — no big up-then-down jolt.
@@ -70,8 +71,12 @@ export default function BookJourney({ p }) {
     ? [1, 1, 0.94, 0.94, 0.82, 0.82, 0.82]
     : [1, 1, 1.02, 1.02, 1.12, 1.12, 1.12]
 
-  // very gentle S-rotation only — no dramatic tilt
-  const rotOut = [-2, 1, -1.5, 1.5, 0, 0, 0]
+  // very gentle rotation only — no dramatic tilt. Desktop holds rotation flat across
+  // B1→B2 (-1.5 → -1.5) so the book is perfectly stationary while the text swaps.
+  // Mobile keeps its original subtle S-rotation (unchanged).
+  const rotOut = desktop
+    ? [-2, 1, -1.5, -1.5, 0, 0, 0]
+    : [-2, 1, -1.5, 1.5, 0, 0, 0]
 
   const x = useTransform(p, STOPS, xOut)
   const y = useTransform(p, STOPS, yOut)
