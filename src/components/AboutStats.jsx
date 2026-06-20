@@ -29,22 +29,8 @@ const stats = [
 ]
 
 export default function AboutStats() {
-  const secRef = useRef(null)
-  const [pos, setPos] = useState({ x: 0, y: 0, show: false })
-
-  const onMove = (e) => {
-    const r = secRef.current.getBoundingClientRect()
-    setPos({ x: e.clientX - r.left, y: e.clientY - r.top, show: true })
-  }
-
   return (
-    <section
-      id="get"
-      ref={secRef}
-      onMouseMove={onMove}
-      onMouseLeave={() => setPos((p) => ({ ...p, show: false }))}
-      className="relative bg-paper2 overflow-hidden py-24 lg:py-32"
-    >
+    <section id="get" className="relative bg-paper2 overflow-hidden py-24 lg:py-32">
       {/* faint line-art background */}
       <img
         src="/lineart-placeholder.svg"
@@ -52,20 +38,6 @@ export default function AboutStats() {
         aria-hidden
         className="absolute inset-0 w-full h-full object-cover opacity-[0.13] pointer-events-none"
       />
-
-      {/* cursor-following smiley easter egg */}
-      <motion.div
-        aria-hidden
-        animate={{ x: pos.x - 44, y: pos.y - 44, opacity: pos.show ? 1 : 0, scale: pos.show ? 1 : 0.4 }}
-        transition={{ type: 'spring', stiffness: 120, damping: 18, mass: 0.6 }}
-        className="absolute top-0 left-0 z-20 pointer-events-none hidden lg:block"
-      >
-        <svg width="88" height="88" viewBox="0 0 88 88">
-          <circle cx="30" cy="34" r="9" fill="#ffeb35" />
-          <circle cx="58" cy="34" r="9" fill="#ffeb35" />
-          <path d="M22 52 Q44 78 66 52" stroke="#ffeb35" strokeWidth="11" fill="none" strokeLinecap="round" />
-        </svg>
-      </motion.div>
 
       <div className="relative z-10 max-w-edge mx-auto px-5 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-14">

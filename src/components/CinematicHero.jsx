@@ -14,7 +14,7 @@ export default function CinematicHero() {
 
   return (
     <section id="top" ref={ref} className="relative h-[140vh]">
-      <div className="sticky top-0 h-[100svh] overflow-hidden flex items-center justify-center bg-paper">
+      <div className="sticky top-0 h-[100lvh] overflow-hidden flex items-center justify-center bg-paper">
         {/* huge ghost word */}
         <motion.h1
           style={{ y: titleY, opacity: wordOpacity }}

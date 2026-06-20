@@ -41,7 +41,7 @@ export default function CinematicStory() {
 
   return (
     <section id="about" ref={ref} style={{ height: '1300vh' }} className="relative">
-      <div className="sticky top-0 h-[100svh] w-full overflow-hidden bg-paper">
+      <div className="sticky top-0 h-[100lvh] w-full overflow-hidden bg-paper">
         {/* ── mood backgrounds (cross-fade) ── */}
         <div className="absolute inset-0 bg-paper" />
         <BgLayer p={g} at={[0.15, 0.18, 0.51, 0.54]} className="bg-ink" />

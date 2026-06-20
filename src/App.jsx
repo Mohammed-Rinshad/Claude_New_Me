@@ -5,6 +5,8 @@ import AboutNav from './components/AboutNav'
 import CinematicHero from './components/CinematicHero'
 import CinematicStory from './components/CinematicStory'
 import BookJourney from './components/BookJourney'
+import MediaConversations from './components/MediaConversations'
+import Author from './components/Author'
 import AboutStats from './components/AboutStats'
 import AboutFooter from './components/AboutFooter'
 
@@ -67,6 +69,8 @@ export default function App() {
           <CinematicHero />
           <CinematicStory />
         </div>
+        <MediaConversations />
+        <Author />
         <AboutStats />
       </main>
       <AboutFooter />

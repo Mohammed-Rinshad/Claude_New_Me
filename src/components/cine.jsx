@@ -8,7 +8,7 @@ export function Scene({ id, vh = 250, className = '', stageClass = '', children 
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
   return (
     <section id={id} ref={ref} style={{ height: `${vh}vh` }} className={`relative ${className}`}>
-      <div className={`sticky top-0 h-[100svh] w-full overflow-hidden ${stageClass}`}>
+      <div className={`sticky top-0 h-[100lvh] w-full overflow-hidden ${stageClass}`}>
         {children(scrollYProgress)}
       </div>
     </section>

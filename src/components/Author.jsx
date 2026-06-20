@@ -4,28 +4,17 @@ export default function Author() {
   return (
     <section id="author" className="py-24 lg:py-32 relative">
       <div className="max-w-edge mx-auto px-5 sm:px-8 lg:px-12 grid lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-16 items-start">
-        {/* Portrait card — replace placeholder with a real photo of the author */}
+        {/* Portrait card — temporary author image; swap for final asset when ready */}
         <Reveal className="lg:sticky lg:top-28">
-          <div className="relative">
-            <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-gradient-to-br from-forest to-forest2 relative shadow-[0_30px_60px_rgba(31,92,46,0.25)]">
-              {/* leaf-heart motif echoing the cover */}
-              <svg viewBox="0 0 200 240" className="absolute inset-0 w-full h-full opacity-20">
-                <path
-                  d="M100 70c22-26 70-20 70 18 0 40-50 64-70 84-20-20-70-44-70-84 0-38 48-44 70-18z"
-                  fill="#f9f8f3"
-                />
-              </svg>
-              <div className="absolute inset-0 grid place-items-center">
-                <span className="font-display text-paper text-[110px] leading-none tracking-tight">GD</span>
-              </div>
-              <span className="absolute bottom-4 left-0 right-0 text-center font-body text-paper/70 text-xs uppercase tracking-eyebrow">
+          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-[0_30px_60px_rgba(31,92,46,0.25)] ring-1 ring-ink/10">
+            <img
+              src="/author-portrait.jpg"
+              alt="Gagan Dhawan, author of The New Me 2.0"
+              className="absolute inset-0 w-full h-full object-cover object-top"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent pt-16 pb-4">
+              <span className="block text-center font-body text-paper/85 text-xs uppercase tracking-eyebrow">
                 Gagan Dhawan · Author
-              </span>
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-ink/45">
-              <span className="text-forest">✦</span>
-              <span className="font-body text-xs uppercase tracking-eyebrow">
-                Photo placeholder — swap in author image
               </span>
             </div>
           </div>
