@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'
+import { useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 
 // A pinned scene: a tall section with a viewport-height sticky stage.
 // Passes scroll progress (0→1 across the section) to its render-prop children.
@@ -31,11 +31,13 @@ export function Beat({ p, at, y = 70, className = '', children }) {
 }
 
 // A number that scrubs between two values as you scroll through `range`.
+// Rendered through a MotionValue (not React state) so scrubbing the number does NOT
+// trigger a React re-render every frame — the digits update on framer's compositor-
+// friendly path, matching how MediaConversations' ViewCount avoids per-frame commits.
 export function ScrubNumber({ p, range, from, to, className = '' }) {
   const v = useTransform(p, range, [from, to])
-  const [n, setN] = useState(from)
-  useMotionValueEvent(v, 'change', (x) => setN(Math.round(x)))
-  return <span className={className}>{n.toLocaleString()}</span>
+  const text = useTransform(v, (x) => Math.round(x).toLocaleString())
+  return <motion.span className={className}>{text}</motion.span>
 }
 
 // Convenience: a motion value mapped through a progress window.
