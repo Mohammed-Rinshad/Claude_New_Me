@@ -40,6 +40,28 @@ const bookWheelMultiplier = (v) => {
   return BOOK_SCROLL_MULTIPLIER + (1 - BOOK_SCROLL_MULTIPLIER) * t
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HERO / BOOK MOBILE TOUCH FEEL — mobile-only, and scoped to the SAME hero/book zone
+// as the wheel damping (boundary = BOOK_SCROLL_END_PROGRESS). Native touch scrolling
+// is kept everywhere on the page EXCEPT that zone, where Lenis touch smoothing is
+// switched on at runtime so a hard flick can't fling through the tall, scroll-scrubbed
+// narrative. The switch is driven by `journey` progress and only ever flips while the
+// finger is UP (lenis.isTouching gate), so a gesture never changes mode mid-swipe. It
+// is disabled entirely under prefers-reduced-motion. Direct finger tracking stays 1:1
+// (touchMultiplier is left at Lenis' default of 1) — only the post-release flick
+// momentum is tamed.
+//
+//   BOOK_TOUCH_SYNC     master switch. false = native touch everywhere (original
+//                       behaviour, nothing changes). true = smooth touch in the zone.
+//   BOOK_TOUCH_INERTIA  Lenis `touchInertiaExponent` while smoothing is active. Lenis'
+//                       default is 1.7; lower = shorter flick throw (more controlled).
+//   BOOK_TOUCH_LERP     Lenis `syncTouchLerp` — smoothing of the post-release glide.
+//                       Lenis' default is 0.075; higher = snappier settle (less floaty).
+// ─────────────────────────────────────────────────────────────────────────────
+const BOOK_TOUCH_SYNC = true
+const BOOK_TOUCH_INERTIA = 1.4
+const BOOK_TOUCH_LERP = 0.1
+
 export default function App() {
   const { scrollYProgress } = useScroll()
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.4 })
@@ -55,7 +77,19 @@ export default function App() {
   })
 
   useEffect(() => {
-    const lenis = new Lenis({ duration: 1.15, smoothWheel: true })
+    // syncTouch starts FALSE so the whole page uses native touch by default; it is
+    // toggled true only inside the book zone (see the effect below). touchMultiplier
+    // stays 1 (finger tracking 1:1). syncTouchLerp / touchInertiaExponent are only
+    // consumed by Lenis while syncTouch is active, so setting them here safely tunes
+    // ONLY the in-zone touch feel and never affects wheel or native scrolling.
+    const lenis = new Lenis({
+      duration: 1.15,
+      smoothWheel: true,
+      syncTouch: false,
+      touchMultiplier: 1,
+      syncTouchLerp: BOOK_TOUCH_LERP,
+      touchInertiaExponent: BOOK_TOUCH_INERTIA,
+    })
     lenisRef.current = lenis
     let id
     const raf = (time) => {
@@ -95,15 +129,49 @@ export default function App() {
   // recreated. Trackpad and mouse wheel both flow through the same handler, so both
   // desktop inputs are covered.
   useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+    // DESKTOP (unchanged): damp wheel/trackpad travel inside the book zone.
     const setWheelMultiplier = (m) => {
       const lenis = lenisRef.current
       if (!lenis) return
       if (lenis.virtualScroll?.options) lenis.virtualScroll.options.wheelMultiplier = m
       if (lenis.options) lenis.options.wheelMultiplier = m
     }
-    const apply = (v) => setWheelMultiplier(bookWheelMultiplier(v))
+
+    // MOBILE: enable Lenis touch smoothing ONLY inside the book zone. Two safety rails:
+    //  • Never switch while a finger is down (lenis.isTouching) — a swipe can't change
+    //    mode under the user's finger; the pending state applies on the next update
+    //    once the gesture ends. Toggling only between gestures is jump-free because
+    //    Lenis keeps its internal scroll synced to the real scroll while native/idle.
+    //  • Respect prefers-reduced-motion and the BOOK_TOUCH_SYNC master switch: when
+    //    either opts out, syncTouch stays false → native touch everywhere.
+    // Outside the zone syncTouch is false, so every lower section keeps native mobile
+    // scrolling exactly as before.
+    const setTouchSync = (v) => {
+      const lenis = lenisRef.current
+      if (!lenis || !lenis.options) return
+      if (lenis.isTouching) return // don't flip mode during an active gesture
+      const wantSync =
+        BOOK_TOUCH_SYNC && !reduceMotion.matches && v < BOOK_SCROLL_END_PROGRESS
+      if (lenis.options.syncTouch !== wantSync) lenis.options.syncTouch = wantSync
+    }
+
+    const apply = (v) => {
+      setWheelMultiplier(bookWheelMultiplier(v))
+      setTouchSync(v)
+    }
+
     apply(journey.get())
-    return journey.on('change', apply)
+    const unsub = journey.on('change', apply)
+    // Re-evaluate if the user's reduced-motion preference changes at runtime.
+    const onReduceMotionChange = () => apply(journey.get())
+    reduceMotion.addEventListener?.('change', onReduceMotionChange)
+
+    return () => {
+      unsub()
+      reduceMotion.removeEventListener?.('change', onReduceMotionChange)
+    }
   }, [journey])
 
   return (
