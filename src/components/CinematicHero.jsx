@@ -10,7 +10,16 @@ export default function CinematicHero() {
   // NOTE: the book itself now lives in <BookJourney/> (one single persistent book
   // that travels hero → story). This section keeps only the ghost word + signature.
   const titleY = useTransform(scrollYProgress, [0, 1], [0, -160])
-  const wordOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
+  // Hold the hero composition (ghost word + signature + cue) FULLY visible for the
+  // bulk of the section, then fade it out over the final stretch so it reaches zero
+  // exactly at the section end — which is precisely where Scene A begins. Previously
+  // it was gone by 60% of the hero, leaving a long empty tail (~56vh) where only the
+  // floating book was visible before Scene A arrived — dead, information-free
+  // scrolling. Holding to 80% and fading [0.8 → 1] keeps meaningful content on screen
+  // right up to the story boundary and hands straight off to Scene A's first beat
+  // (which fades in from story progress 0), so the handoff is a continuous crossfade
+  // with no blank stretch.
+  const wordOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 1, 0])
 
   return (
     <section id="top" ref={ref} className="relative h-[140vh]">

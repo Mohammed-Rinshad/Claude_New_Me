@@ -23,8 +23,17 @@ const H = 0.105 // hero end / story start (≈ 140vh / (1440vh − 100svh))
 const B1 = 0.15 // book settled LEFT  (beat 1 hold)
 const B2 = 0.2 // book stays LEFT (beat 2 hold — only the text changes)
 const B3 = 0.235 // book CENTER       (beat 3 in)
-const HOLD = 0.25 // pinned center while "imbalance" is active
-const OUT = 0.263 // fully faded before Scene B's dark background takes over
+// HOLD/OUT are timed to Scene A's final beat ("…change that imbalance"), which is
+// fully established by story-g≈0.148 and holds until Scene A ends at g≈0.20. The book
+// stays pinned centred with that line through its whole moment (HOLD→g≈0.185), then
+// fades across g≈0.185→0.213 — exactly the window in which the dark Scene B background
+// cross-fades in (CinematicStory's ink BgLayer, at=[0.185,0.215,…]). So the book, its
+// closing line, and the scene change all leave in lockstep as one cinematic
+// composition, instead of the book vanishing ~40vh early (old OUT=0.263 → g≈0.16).
+// Only the hold/fade timing changes here — movement, scale, rotation and centring are
+// untouched (the last three position stops are already identical/centred).
+const HOLD = 0.285 // pinned centre through the closing beat's full moment (g≈0.185)
+const OUT = 0.31 // fades out in lockstep with the dark Scene B background (g≈0.213)
 
 const STOPS = [0, H, B1, B2, B3, HOLD, OUT]
 
