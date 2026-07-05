@@ -38,17 +38,17 @@ const BOOK_PROFILE = {
 
 const STORY_PROFILE = {
   wheel: 0.6,
-  touch: 0.88,
-  inertia: 1.34,
-  lerp: 0.1,
+  touch: 0.96,
+  inertia: 1.42,
+  lerp: 0.095,
   syncTouch: true,
 }
 
 const MEDIA_PROFILE = {
   wheel: 0.55,
-  touch: 0.82,
-  inertia: 1.3,
-  lerp: 0.11,
+  touch: 0.9,
+  inertia: 1.36,
+  lerp: 0.105,
   syncTouch: true,
 }
 
