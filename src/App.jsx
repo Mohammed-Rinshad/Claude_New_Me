@@ -18,31 +18,47 @@ import AboutFooter from './components/AboutFooter'
 //   BOOK_SCROLL_MULTIPLIER   Lenis wheelMultiplier while the book is on screen.
 //                            1 = default. Lower = less page travel per wheel/trackpad
 //                            gesture (more controlled). Raise toward 1 for more travel.
-//   BOOK_SCROLL_END_PROGRESS journey progress (0→1 across hero+story) at which normal
-//                            sensitivity fully resumes. The book fades out at ≈0.263,
-//                            so 0.28 leaves a small margin past the fade.
-//   BOOK_SCROLL_RAMP         width of the progress band, ending at END_PROGRESS, over
-//                            which the multiplier eases DAMPED→1 instead of stepping.
-//                            Keeps the sensitivity change imperceptible. Set to 0 for a
-//                            hard switch.
+//   NARRATIVE_SCROLL_MULTIPLIER  Lenis wheelMultiplier from 2017 through Media.
+//   NARRATIVE_TOUCH_MULTIPLIER   Lenis touch travel multiplier in the same zone.
+//   NARRATIVE_RAMP_*_VIEWPORTS   Viewport-based easing bands at the zone edges.
 // ─────────────────────────────────────────────────────────────────────────────
 const BOOK_SCROLL_MULTIPLIER = 0.75
-const BOOK_SCROLL_END_PROGRESS = 0.28
-const BOOK_SCROLL_RAMP = 0.04
+const NARRATIVE_STORY_START_PROGRESS = 0.2 // CinematicStory scene B: 2017
+const NARRATIVE_SCROLL_MULTIPLIER = 0.6
+const NARRATIVE_RAMP_IN_VIEWPORTS = 0.4
+const NARRATIVE_RAMP_OUT_VIEWPORTS = 0.8
+const NARRATIVE_TOUCH_MULTIPLIER = 0.72
+const NARRATIVE_TOUCH_INERTIA = 1.25
+const NARRATIVE_TOUCH_LERP = 0.12
 
-// Multiplier for a given journey progress: flat DAMPED through the book zone, a short
-// linear ease back to 1 across the ramp band, then flat 1 for the rest of the page.
-const bookWheelMultiplier = (v) => {
-  const rampStart = BOOK_SCROLL_END_PROGRESS - BOOK_SCROLL_RAMP
-  if (v <= rampStart) return BOOK_SCROLL_MULTIPLIER
-  if (v >= BOOK_SCROLL_END_PROGRESS) return 1
-  const t = (v - rampStart) / BOOK_SCROLL_RAMP // 0→1 across the ramp band
-  return BOOK_SCROLL_MULTIPLIER + (1 - BOOK_SCROLL_MULTIPLIER) * t
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+const mix = (from, to, t) => from + (to - from) * clamp(t, 0, 1)
+
+// Keep the book/hero feel at 0.75, then use a more controlled profile only from
+// 2017 through the end of Media. Ramp out before Author so lower sections are native.
+const narrativeWheelMultiplier = (y, metrics) => {
+  if (!metrics || y < metrics.start) return BOOK_SCROLL_MULTIPLIER
+  if (y < metrics.start + metrics.rampIn) {
+    return mix(
+      BOOK_SCROLL_MULTIPLIER,
+      NARRATIVE_SCROLL_MULTIPLIER,
+      (y - metrics.start) / metrics.rampIn
+    )
+  }
+  if (y < metrics.end - metrics.rampOut) return NARRATIVE_SCROLL_MULTIPLIER
+  if (y < metrics.end) {
+    return mix(
+      NARRATIVE_SCROLL_MULTIPLIER,
+      1,
+      (y - (metrics.end - metrics.rampOut)) / metrics.rampOut
+    )
+  }
+  return 1
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HERO / BOOK MOBILE TOUCH FEEL — mobile-only, and scoped to the SAME hero/book zone
-// as the wheel damping (boundary = BOOK_SCROLL_END_PROGRESS). Native touch scrolling
+// HERO / STORY MOBILE TOUCH FEEL — mobile-only, and scoped to the controlled story zone
+// as the wheel damping. Native touch scrolling
 // is kept everywhere on the page EXCEPT that zone, where Lenis touch smoothing is
 // switched on at runtime so a hard flick can't fling through the tall, scroll-scrubbed
 // narrative. The switch is driven by `journey` progress and only ever flips while the
@@ -63,7 +79,7 @@ const BOOK_TOUCH_INERTIA = 1.4
 const BOOK_TOUCH_LERP = 0.1
 
 export default function App() {
-  const { scrollYProgress } = useScroll()
+  const { scrollY, scrollYProgress } = useScroll()
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.4 })
 
   // One continuous progress value across the hero + story. The single book reads
@@ -130,6 +146,24 @@ export default function App() {
   // desktop inputs are covered.
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let metrics = null
+
+    const readMetrics = () => {
+      const story = document.getElementById('about')
+      const author = document.getElementById('author')
+      if (!story || !author) return null
+
+      const storyScrollable = Math.max(1, story.offsetHeight - window.innerHeight)
+      const start = story.offsetTop + storyScrollable * NARRATIVE_STORY_START_PROGRESS
+      const end = author.offsetTop
+      const rampIn = window.innerHeight * NARRATIVE_RAMP_IN_VIEWPORTS
+      const rampOut = Math.min(
+        window.innerHeight * NARRATIVE_RAMP_OUT_VIEWPORTS,
+        Math.max(1, (end - start) * 0.25)
+      )
+
+      return { start, end, rampIn, rampOut }
+    }
 
     // DESKTOP (unchanged): damp wheel/trackpad travel inside the book zone.
     const setWheelMultiplier = (m) => {
@@ -148,31 +182,51 @@ export default function App() {
     //    either opts out, syncTouch stays false → native touch everywhere.
     // Outside the zone syncTouch is false, so every lower section keeps native mobile
     // scrolling exactly as before.
-    const setTouchSync = (v) => {
+    const setTouchProfile = (y) => {
       const lenis = lenisRef.current
       if (!lenis || !lenis.options) return
       if (lenis.isTouching) return // don't flip mode during an active gesture
+      const inNarrative = metrics && y >= metrics.start && y < metrics.end
       const wantSync =
-        BOOK_TOUCH_SYNC && !reduceMotion.matches && v < BOOK_SCROLL_END_PROGRESS
+        BOOK_TOUCH_SYNC && !reduceMotion.matches && (!metrics || y < metrics.end)
       if (lenis.options.syncTouch !== wantSync) lenis.options.syncTouch = wantSync
+
+      const touchMultiplier = inNarrative ? NARRATIVE_TOUCH_MULTIPLIER : 1
+      if (lenis.virtualScroll?.options) {
+        lenis.virtualScroll.options.touchMultiplier = touchMultiplier
+      }
+      lenis.options.touchMultiplier = touchMultiplier
+      lenis.options.touchInertiaExponent = inNarrative
+        ? NARRATIVE_TOUCH_INERTIA
+        : BOOK_TOUCH_INERTIA
+      lenis.options.syncTouchLerp = inNarrative ? NARRATIVE_TOUCH_LERP : BOOK_TOUCH_LERP
     }
 
-    const apply = (v) => {
-      setWheelMultiplier(bookWheelMultiplier(v))
-      setTouchSync(v)
+    const apply = (y) => {
+      setWheelMultiplier(narrativeWheelMultiplier(y, metrics))
+      setTouchProfile(y)
     }
 
-    apply(journey.get())
-    const unsub = journey.on('change', apply)
+    const updateMetrics = () => {
+      metrics = readMetrics()
+      apply(window.scrollY)
+    }
+
+    updateMetrics()
+    const resizeId = requestAnimationFrame(updateMetrics)
+    window.addEventListener('resize', updateMetrics)
+    const unsub = scrollY.on('change', apply)
     // Re-evaluate if the user's reduced-motion preference changes at runtime.
-    const onReduceMotionChange = () => apply(journey.get())
+    const onReduceMotionChange = () => apply(window.scrollY)
     reduceMotion.addEventListener?.('change', onReduceMotionChange)
 
     return () => {
+      cancelAnimationFrame(resizeId)
+      window.removeEventListener('resize', updateMetrics)
       unsub()
       reduceMotion.removeEventListener?.('change', onReduceMotionChange)
     }
-  }, [journey])
+  }, [scrollY])
 
   return (
     <div className="grain relative">
