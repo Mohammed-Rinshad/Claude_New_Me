@@ -249,7 +249,7 @@ export default function MediaConversations() {
   })
 
   return (
-    <section ref={ref} style={{ height: '520vh' }} className="relative bg-paper text-ink">
+    <section id="media" ref={ref} style={{ height: '520vh' }} className="relative bg-paper text-ink">
       <div className="sticky top-0 flex h-[100lvh] w-full flex-col overflow-hidden">
         {/* soft focus glow behind the centred card */}
         <div

@@ -18,42 +18,84 @@ import AboutFooter from './components/AboutFooter'
 //   BOOK_SCROLL_MULTIPLIER   Lenis wheelMultiplier while the book is on screen.
 //                            1 = default. Lower = less page travel per wheel/trackpad
 //                            gesture (more controlled). Raise toward 1 for more travel.
-//   NARRATIVE_SCROLL_MULTIPLIER  Lenis wheelMultiplier from 2017 through Media.
-//   NARRATIVE_TOUCH_MULTIPLIER   Lenis touch travel multiplier in the same zone.
-//   NARRATIVE_RAMP_*_VIEWPORTS   Viewport-based easing bands at the zone edges.
+//   BOOK_PROFILE    Hero/book feel, preserved before the 2017 beat.
+//   STORY_PROFILE   Controlled profile for 2017 through the end of the story.
+//   MEDIA_PROFILE   More deliberate profile for conversation-card storytelling.
 // ─────────────────────────────────────────────────────────────────────────────
 const BOOK_SCROLL_MULTIPLIER = 0.75
 const NARRATIVE_STORY_START_PROGRESS = 0.2 // CinematicStory scene B: 2017
-const NARRATIVE_SCROLL_MULTIPLIER = 0.6
-const NARRATIVE_RAMP_IN_VIEWPORTS = 0.4
-const NARRATIVE_RAMP_OUT_VIEWPORTS = 0.8
-const NARRATIVE_TOUCH_MULTIPLIER = 0.72
-const NARRATIVE_TOUCH_INERTIA = 1.25
-const NARRATIVE_TOUCH_LERP = 0.12
+const STORY_RAMP_IN_VIEWPORTS = 0.4
+const STORY_MEDIA_RAMP_VIEWPORTS = 0.35
+const MEDIA_RAMP_OUT_VIEWPORTS = 0.8
+
+const BOOK_PROFILE = {
+  wheel: BOOK_SCROLL_MULTIPLIER,
+  touch: 1,
+  inertia: 1.4,
+  lerp: 0.1,
+  syncTouch: true,
+}
+
+const STORY_PROFILE = {
+  wheel: 0.6,
+  touch: 0.72,
+  inertia: 1.25,
+  lerp: 0.12,
+  syncTouch: true,
+}
+
+const MEDIA_PROFILE = {
+  wheel: 0.55,
+  touch: 0.65,
+  inertia: 1.18,
+  lerp: 0.13,
+  syncTouch: true,
+}
+
+const DEFAULT_PROFILE = {
+  wheel: 1,
+  touch: 1,
+  inertia: 1.4,
+  lerp: 0.1,
+  syncTouch: false,
+}
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
 const mix = (from, to, t) => from + (to - from) * clamp(t, 0, 1)
+const mixProfile = (from, to, t) => ({
+  wheel: mix(from.wheel, to.wheel, t),
+  touch: mix(from.touch, to.touch, t),
+  inertia: mix(from.inertia, to.inertia, t),
+  lerp: mix(from.lerp, to.lerp, t),
+  syncTouch: t >= 1 ? to.syncTouch : from.syncTouch,
+})
 
-// Keep the book/hero feel at 0.75, then use a more controlled profile only from
-// 2017 through the end of Media. Ramp out before Author so lower sections are native.
-const narrativeWheelMultiplier = (y, metrics) => {
-  if (!metrics || y < metrics.start) return BOOK_SCROLL_MULTIPLIER
-  if (y < metrics.start + metrics.rampIn) {
-    return mix(
-      BOOK_SCROLL_MULTIPLIER,
-      NARRATIVE_SCROLL_MULTIPLIER,
-      (y - metrics.start) / metrics.rampIn
+const scrollProfile = (y, metrics) => {
+  if (!metrics || y < metrics.storyStart) return BOOK_PROFILE
+  if (y < metrics.storyStart + metrics.storyRampIn) {
+    return mixProfile(
+      BOOK_PROFILE,
+      STORY_PROFILE,
+      (y - metrics.storyStart) / metrics.storyRampIn
     )
   }
-  if (y < metrics.end - metrics.rampOut) return NARRATIVE_SCROLL_MULTIPLIER
-  if (y < metrics.end) {
-    return mix(
-      NARRATIVE_SCROLL_MULTIPLIER,
-      1,
-      (y - (metrics.end - metrics.rampOut)) / metrics.rampOut
+  if (y < metrics.mediaStart - metrics.storyMediaRamp) return STORY_PROFILE
+  if (y < metrics.mediaStart + metrics.storyMediaRamp) {
+    return mixProfile(
+      STORY_PROFILE,
+      MEDIA_PROFILE,
+      (y - (metrics.mediaStart - metrics.storyMediaRamp)) / (metrics.storyMediaRamp * 2)
     )
   }
-  return 1
+  if (y < metrics.authorStart - metrics.mediaRampOut) return MEDIA_PROFILE
+  if (y < metrics.authorStart) {
+    return mixProfile(
+      MEDIA_PROFILE,
+      DEFAULT_PROFILE,
+      (y - (metrics.authorStart - metrics.mediaRampOut)) / metrics.mediaRampOut
+    )
+  }
+  return DEFAULT_PROFILE
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -150,22 +192,28 @@ export default function App() {
 
     const readMetrics = () => {
       const story = document.getElementById('about')
+      const media = document.getElementById('media')
       const author = document.getElementById('author')
-      if (!story || !author) return null
+      if (!story || !media || !author) return null
 
       const storyScrollable = Math.max(1, story.offsetHeight - window.innerHeight)
-      const start = story.offsetTop + storyScrollable * NARRATIVE_STORY_START_PROGRESS
-      const end = author.offsetTop
-      const rampIn = window.innerHeight * NARRATIVE_RAMP_IN_VIEWPORTS
-      const rampOut = Math.min(
-        window.innerHeight * NARRATIVE_RAMP_OUT_VIEWPORTS,
-        Math.max(1, (end - start) * 0.25)
+      const storyStart = story.offsetTop + storyScrollable * NARRATIVE_STORY_START_PROGRESS
+      const mediaStart = media.offsetTop
+      const authorStart = author.offsetTop
+      const storyRampIn = window.innerHeight * STORY_RAMP_IN_VIEWPORTS
+      const storyMediaRamp = Math.min(
+        window.innerHeight * STORY_MEDIA_RAMP_VIEWPORTS,
+        Math.max(1, (authorStart - storyStart) * 0.08)
+      )
+      const mediaRampOut = Math.min(
+        window.innerHeight * MEDIA_RAMP_OUT_VIEWPORTS,
+        Math.max(1, (authorStart - mediaStart) * 0.25)
       )
 
-      return { start, end, rampIn, rampOut }
+      return { storyStart, mediaStart, authorStart, storyRampIn, storyMediaRamp, mediaRampOut }
     }
 
-    // DESKTOP (unchanged): damp wheel/trackpad travel inside the book zone.
+    // Lenis reads wheelMultiplier live from VirtualScroll on each wheel event.
     const setWheelMultiplier = (m) => {
       const lenis = lenisRef.current
       if (!lenis) return
@@ -173,38 +221,34 @@ export default function App() {
       if (lenis.options) lenis.options.wheelMultiplier = m
     }
 
-    // MOBILE: enable Lenis touch smoothing ONLY inside the book zone. Two safety rails:
+    // Apply the active zone's touch profile. Two safety rails:
     //  • Never switch while a finger is down (lenis.isTouching) — a swipe can't change
     //    mode under the user's finger; the pending state applies on the next update
     //    once the gesture ends. Toggling only between gestures is jump-free because
     //    Lenis keeps its internal scroll synced to the real scroll while native/idle.
     //  • Respect prefers-reduced-motion and the BOOK_TOUCH_SYNC master switch: when
     //    either opts out, syncTouch stays false → native touch everywhere.
-    // Outside the zone syncTouch is false, so every lower section keeps native mobile
-    // scrolling exactly as before.
-    const setTouchProfile = (y) => {
+    // The default profile turns syncTouch off again for Author and lower sections.
+    const setTouchProfile = (profile) => {
       const lenis = lenisRef.current
       if (!lenis || !lenis.options) return
       if (lenis.isTouching) return // don't flip mode during an active gesture
-      const inNarrative = metrics && y >= metrics.start && y < metrics.end
       const wantSync =
-        BOOK_TOUCH_SYNC && !reduceMotion.matches && (!metrics || y < metrics.end)
+        BOOK_TOUCH_SYNC && !reduceMotion.matches && profile.syncTouch
       if (lenis.options.syncTouch !== wantSync) lenis.options.syncTouch = wantSync
 
-      const touchMultiplier = inNarrative ? NARRATIVE_TOUCH_MULTIPLIER : 1
       if (lenis.virtualScroll?.options) {
-        lenis.virtualScroll.options.touchMultiplier = touchMultiplier
+        lenis.virtualScroll.options.touchMultiplier = profile.touch
       }
-      lenis.options.touchMultiplier = touchMultiplier
-      lenis.options.touchInertiaExponent = inNarrative
-        ? NARRATIVE_TOUCH_INERTIA
-        : BOOK_TOUCH_INERTIA
-      lenis.options.syncTouchLerp = inNarrative ? NARRATIVE_TOUCH_LERP : BOOK_TOUCH_LERP
+      lenis.options.touchMultiplier = profile.touch
+      lenis.options.touchInertiaExponent = profile.inertia
+      lenis.options.syncTouchLerp = profile.lerp
     }
 
     const apply = (y) => {
-      setWheelMultiplier(narrativeWheelMultiplier(y, metrics))
-      setTouchProfile(y)
+      const profile = scrollProfile(y, metrics)
+      setWheelMultiplier(profile.wheel)
+      setTouchProfile(profile)
     }
 
     const updateMetrics = () => {
