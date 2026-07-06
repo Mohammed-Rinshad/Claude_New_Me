@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Beat, ScrubNumber, BgLayer, useLocal } from './cine'
 
@@ -15,6 +15,8 @@ import { Beat, ScrubNumber, BgLayer, useLocal } from './cine'
 // scrolling, and one normal swipe advances ≈ one frame. Still fully scrub-based —
 // small gestures still move proportionally; nothing is snapped or page-locked.
 const SCENES = { A: 3, B: 3, C: 2, D: 2, E: 2, F: 3 } // frames per scene (Σ = 15)
+const STORY_START = 0.2
+const MOBILE_STORY_END = 0.9
 
 // Even beat timing inside a scene. The scene's local 0→1 is split into `k` equal
 // slots (one per frame); frame `i` fades in, holds, then fades out within its slot
@@ -33,7 +35,25 @@ const frameAt = (i, k) => {
 
 export default function CinematicStory() {
   const ref = useRef(null)
-  const { scrollYProgress: g } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  const [mobile, setMobile] = useState(
+    () => (typeof window !== 'undefined' ? window.matchMedia('(max-width: 1023px)').matches : false)
+  )
+  const { scrollYProgress: raw } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  const mobileProgress = useTransform(
+    raw,
+    [0, STORY_START, MOBILE_STORY_END, 1],
+    [0, STORY_START, 1, 1],
+    { clamp: true }
+  )
+  const g = mobile ? mobileProgress : raw
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 1023px)')
+    const onChange = () => setMobile(query.matches)
+    onChange()
+    query.addEventListener?.('change', onChange)
+    return () => query.removeEventListener?.('change', onChange)
+  }, [])
 
   // Scene windows sized proportional to frame count (cumulative k/15), so each of the
   // 15 frames spans an identical 1/15 of global progress.
