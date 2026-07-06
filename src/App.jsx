@@ -26,7 +26,7 @@ const BOOK_SCROLL_MULTIPLIER = 0.75
 // The book is driven by `journey` progress across the hero+story wrapper. This is
 // the same visual progress point where BookJourney finishes fading the book out.
 const BOOK_SEQUENCE_END_PROGRESS = 0.31
-const STORY_RAMP_IN_VIEWPORTS = 0.4
+const STORY_SEQUENCE_START_PROGRESS = 0.2 // CinematicStory scene B: 2017
 const STORY_MEDIA_RAMP_VIEWPORTS = 0.35
 const MEDIA_RAMP_OUT_VIEWPORTS = 0.8
 
@@ -73,20 +73,13 @@ const mixProfile = (from, to, t) => ({
 })
 
 const scrollProfile = (y, metrics) => {
-  if (!metrics || y < metrics.bookEnd) return BOOK_PROFILE
-  if (y < metrics.bookEnd + metrics.storyRampIn) {
-    return mixProfile(
-      BOOK_PROFILE,
-      STORY_PROFILE,
-      (y - metrics.bookEnd) / metrics.storyRampIn
-    )
-  }
-  if (y < metrics.mediaStart - metrics.storyMediaRamp) return STORY_PROFILE
+  if (!metrics || y < metrics.storyStart) return BOOK_PROFILE
+  if (y < metrics.mediaStart) return STORY_PROFILE
   if (y < metrics.mediaStart + metrics.storyMediaRamp) {
     return mixProfile(
       STORY_PROFILE,
       MEDIA_PROFILE,
-      (y - (metrics.mediaStart - metrics.storyMediaRamp)) / (metrics.storyMediaRamp * 2)
+      (y - metrics.mediaStart) / metrics.storyMediaRamp
     )
   }
   if (y < metrics.authorStart - metrics.mediaRampOut) return MEDIA_PROFILE
@@ -197,19 +190,25 @@ export default function App() {
 
       const journeyScrollable = Math.max(1, journeyEl.offsetHeight - window.innerHeight)
       const bookEnd = journeyEl.offsetTop + journeyScrollable * BOOK_SEQUENCE_END_PROGRESS
+      const story = document.getElementById('about')
+      const storyScrollable = story
+        ? Math.max(1, story.offsetHeight - window.innerHeight)
+        : journeyScrollable
+      const storyStart = story
+        ? story.offsetTop + storyScrollable * STORY_SEQUENCE_START_PROGRESS
+        : bookEnd
       const mediaStart = media.offsetTop
       const authorStart = author.offsetTop
-      const storyRampIn = window.innerHeight * STORY_RAMP_IN_VIEWPORTS
       const storyMediaRamp = Math.min(
         window.innerHeight * STORY_MEDIA_RAMP_VIEWPORTS,
-        Math.max(1, (authorStart - bookEnd) * 0.08)
+        Math.max(1, (authorStart - storyStart) * 0.08)
       )
       const mediaRampOut = Math.min(
         window.innerHeight * MEDIA_RAMP_OUT_VIEWPORTS,
         Math.max(1, (authorStart - mediaStart) * 0.25)
       )
 
-      return { bookEnd, mediaStart, authorStart, storyRampIn, storyMediaRamp, mediaRampOut }
+      return { storyStart, mediaStart, authorStart, storyMediaRamp, mediaRampOut }
     }
 
     // Lenis reads wheelMultiplier live from VirtualScroll on each wheel event.
