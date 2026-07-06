@@ -39,8 +39,8 @@ const BOOK_PROFILE = {
 }
 
 const STORY_PROFILE = {
-  wheel: 0.52,
-  touch: 0.92,
+  wheel: 0.55,
+  touch: 0.98,
   inertia: 1.35,
   lerp: 0.11,
   syncTouch: true,
