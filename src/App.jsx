@@ -18,12 +18,14 @@ import AboutFooter from './components/AboutFooter'
 //   BOOK_SCROLL_MULTIPLIER   Lenis wheelMultiplier while the book is on screen.
 //                            1 = default. Lower = less page travel per wheel/trackpad
 //                            gesture (more controlled). Raise toward 1 for more travel.
-//   BOOK_PROFILE    Hero/book feel, preserved before the 2017 beat.
+//   BOOK_PROFILE    Hero/book feel, preserved through the floating-book sequence.
 //   STORY_PROFILE   Controlled profile for 2017 through the end of the story.
 //   MEDIA_PROFILE   More deliberate profile for conversation-card storytelling.
 // ─────────────────────────────────────────────────────────────────────────────
 const BOOK_SCROLL_MULTIPLIER = 0.75
-const NARRATIVE_STORY_START_PROGRESS = 0.2 // CinematicStory scene B: 2017
+// The book is driven by `journey` progress across the hero+story wrapper. This is
+// the same visual progress point where BookJourney finishes fading the book out.
+const BOOK_SEQUENCE_END_PROGRESS = 0.31
 const STORY_RAMP_IN_VIEWPORTS = 0.4
 const STORY_MEDIA_RAMP_VIEWPORTS = 0.35
 const MEDIA_RAMP_OUT_VIEWPORTS = 0.8
@@ -71,12 +73,12 @@ const mixProfile = (from, to, t) => ({
 })
 
 const scrollProfile = (y, metrics) => {
-  if (!metrics || y < metrics.storyStart) return BOOK_PROFILE
-  if (y < metrics.storyStart + metrics.storyRampIn) {
+  if (!metrics || y < metrics.bookEnd) return BOOK_PROFILE
+  if (y < metrics.bookEnd + metrics.storyRampIn) {
     return mixProfile(
       BOOK_PROFILE,
       STORY_PROFILE,
-      (y - metrics.storyStart) / metrics.storyRampIn
+      (y - metrics.bookEnd) / metrics.storyRampIn
     )
   }
   if (y < metrics.mediaStart - metrics.storyMediaRamp) return STORY_PROFILE
@@ -177,40 +179,37 @@ export default function App() {
     }
   }, [])
 
-  // Scroll feel — ONLY for the hero/book storytelling section. That region is very
-  // tall, so with the default wheelMultiplier a single wheel/trackpad gesture flung
-  // the page too far and the story felt jumpy/over-sensitive. While the book is on
-  // screen we damp the per-gesture travel, then ease back to the default so every
-  // section below the story scrolls exactly as before (see the tuning constants at
-  // the top of this file). Lenis reads wheelMultiplier live from its VirtualScroll on
-  // each wheel event, so this switches instantly and never needs the instance to be
-  // recreated. Trackpad and mouse wheel both flow through the same handler, so both
-  // desktop inputs are covered.
+  // Scroll feel profiles. The first profile is tied to the actual hero+floating-book
+  // lifecycle: it starts with the hero wrapper and hands off only when the shared
+  // book journey reaches the visual fade-out point. Lenis reads wheelMultiplier live
+  // from its VirtualScroll on each wheel event, so profile changes do not require the
+  // instance to be recreated. Trackpad and mouse wheel both flow through the same
+  // handler, so both desktop inputs are covered.
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
     let metrics = null
 
     const readMetrics = () => {
-      const story = document.getElementById('about')
+      const journeyEl = journeyRef.current
       const media = document.getElementById('media')
       const author = document.getElementById('author')
-      if (!story || !media || !author) return null
+      if (!journeyEl || !media || !author) return null
 
-      const storyScrollable = Math.max(1, story.offsetHeight - window.innerHeight)
-      const storyStart = story.offsetTop + storyScrollable * NARRATIVE_STORY_START_PROGRESS
+      const journeyScrollable = Math.max(1, journeyEl.offsetHeight - window.innerHeight)
+      const bookEnd = journeyEl.offsetTop + journeyScrollable * BOOK_SEQUENCE_END_PROGRESS
       const mediaStart = media.offsetTop
       const authorStart = author.offsetTop
       const storyRampIn = window.innerHeight * STORY_RAMP_IN_VIEWPORTS
       const storyMediaRamp = Math.min(
         window.innerHeight * STORY_MEDIA_RAMP_VIEWPORTS,
-        Math.max(1, (authorStart - storyStart) * 0.08)
+        Math.max(1, (authorStart - bookEnd) * 0.08)
       )
       const mediaRampOut = Math.min(
         window.innerHeight * MEDIA_RAMP_OUT_VIEWPORTS,
         Math.max(1, (authorStart - mediaStart) * 0.25)
       )
 
-      return { storyStart, mediaStart, authorStart, storyRampIn, storyMediaRamp, mediaRampOut }
+      return { bookEnd, mediaStart, authorStart, storyRampIn, storyMediaRamp, mediaRampOut }
     }
 
     // Lenis reads wheelMultiplier live from VirtualScroll on each wheel event.
